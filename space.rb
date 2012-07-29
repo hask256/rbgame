@@ -145,7 +145,6 @@ end
         
 @map_g = MapGenerator.new 20
 
-puts @map_g.alien
 
 
 
@@ -178,6 +177,8 @@ Sprites::UpdateGroup.extend_object @aliens
 @bonus = Sprites::Group.new
 Sprites::UpdateGroup.extend_object @bonus
 
+@map_g.alien.each {|m| @aliens << m}
+
 
 Rubygame::enable_key_repeat 0.03, 0.03
 
@@ -196,14 +197,28 @@ Rubygame::enable_key_repeat 0.03, 0.03
 @ammo = 20
 @cycles = 0
 
+TTF.setup
+point_size = 15
+$font = TTF.new "DejaVuSans-Bold.ttf", point_size
+
+smooth = true
+GREEN = [0x00, 0x99, 0x00]
+@label = { "points" => 0,
+           "killed" => 1,
+           "life"   => 2,
+           "ammo"   => 3,
+           "cycles" => 4
+         }
+
+
+@screen.flip
+
 
 
 play = true
 while play do
 
-
-    @sprites.undraw @screen, @background
-    @fires.undraw @screen, @background
+    [@sprites, @fires, @aliens, @bonus].each { |x| x.undraw @screen, @background }
 
     @event_queue.each do |event|
     case event
@@ -242,9 +257,19 @@ while play do
         end
     end
 
-    @fires.each { |f| f.move }
+    @fires.each  { |f| f.move }
+    @aliens.each { |a| a.move_down }
     
     [@sprites, @aliens, @bonus, @fires].each { |x| x.draw @screen }
+
+
+    @label.each do |k, v|
+        lab = $font.render_utf8 "%s: %s" %[k, v], smooth, GREEN
+        rt = lab.make_rect
+        rt.topleft = [1, v * 20]
+        lab.blit @screen, rt
+    end
+
     @screen.flip
 
 end
